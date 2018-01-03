@@ -9,6 +9,7 @@ import (
 
 type Config struct {
   Amqp    AMQP
+  Http    HTTP
 }
 
 var settings Config
@@ -29,4 +30,8 @@ func loadConfig( configFile *string ) {
   }
 
   log.Printf( "Config: %+v\n", settings )
+
+  // Call each supported init method so they can play with the config
+  amqpInit()
+  httpInit()
 }

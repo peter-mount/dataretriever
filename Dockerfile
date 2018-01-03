@@ -7,28 +7,32 @@ FROM golang:latest as build
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 
+# We want to build our final image under /dest
+# A copy of /etc/ssl is required if we want to use https datasources
+RUN mkdir -p /dest/etc &&\
+    cp -rp /etc/ssl /dest/etc/
+
 # Ensure we have the libraries - docker will cache these between builds
 RUN go get -v \
       flag \
-      log \
-      io/ioutil \
-      path/filepath \
       github.com/go-stomp/stomp \
       github.com/streadway/amqp \
-      gopkg.in/yaml.v2
+      gopkg.in/yaml.v2 \
+      io/ioutil \
+      log \
+      net/http \
+      path/filepath
 
 # Import the source and compile
 WORKDIR /src
-
 ADD src /src/
-
 RUN go build \
       -v \
       -x \
-      -o /usr/local/bin/bridge \
+      -o /dest/bin/bridge \
       .
 
-# Finally build the final runtime container containing just the single static binary
+# Finally build the final runtime container will all required files
 FROM scratch
-COPY --from=build /usr/local/bin/bridge /usr/local/bin/bridge
+COPY --from=build /dest/ /
 CMD ["bridge"]

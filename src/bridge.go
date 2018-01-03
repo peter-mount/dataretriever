@@ -19,10 +19,18 @@ func main() {
     os.Exit(0)
   }
 
+  // Load config
   loadConfig( yamlFile )
 
-  amqpInit()
+  if( !settings.Http.enabled ) {
+    log.Fatal( "No message source configured, bailing out" )
+  }
 
   amqpConnect()
-  amqpPublish( []byte("Test message") )
+  //amqpPublish( []byte("Test message") )
+
+  if( settings.Http.enabled ) {
+    httpRun()
+  }
+
 }
