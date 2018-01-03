@@ -32,18 +32,11 @@ func amqpInit( ) {
 
 // Connect to amqp server as necessary
 func amqpConnect( ) {
-  if( settings.Amqp.connection != nil && settings.Amqp.channel != nil ) {
-    log.Println( "Already connected" )
-    return
-  }
-
-  log.Println( "Connecting to amqp" )
+  debug( "Connecting to amqp" )
 
   // Connect using the amqp url
   connection, err := amqp.Dial( settings.Amqp.Url )
-  if( err != nil ) {
-    log.Fatal( "Failed to connect to AMQP: ", err )
-  }
+  fatalOnError( err )
   settings.Amqp.connection = connection
 
   // To cleanly shutdown by flushing kernel buffers, make sure to close and
@@ -55,32 +48,24 @@ func amqpConnect( ) {
   // a different channel.  If you use many channels, it's useful for the
   // server to
   channel, err := settings.Amqp.connection.Channel()
-  if( err != nil ) {
-    log.Fatal( "Failed to connect to AMQP: ", err )
-  }
+  fatalOnError( err )
   settings.Amqp.channel = channel
 
-  log.Println( "AMQP Connected" )
+  debug( "AMQP Connected" )
 
-  if err := settings.Amqp.channel.ExchangeDeclare( settings.Amqp.Exchange, "topic", true, false, false, false, nil); err != nil {
-    log.Fatalf("exchange.declare destination: %s", err)
-  }
-
+  fatalOnError( settings.Amqp.channel.ExchangeDeclare( settings.Amqp.Exchange, "topic", true, false, false, false, nil) )
 }
 
 // Publish a message
 func amqpPublish( msg []byte ) {
-  //log.Println( "Publishing to ", settings.amqp.exchange, settings.amqp.routingKey )
+  debug( "Publishing to ", settings.Amqp.Exchange, settings.Amqp.RoutingKey )
 
-  err := settings.Amqp.channel.Publish(
+  fatalOnError( settings.Amqp.channel.Publish(
     settings.Amqp.Exchange,
     settings.Amqp.RoutingKey,
     false,
     false,
     amqp.Publishing{
       Body: msg,
-    })
-  if err != nil {
-    log.Fatal( "Failed to publish message: ", err )
-  }
+    }) )
 }

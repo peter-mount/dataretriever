@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+  Debug   bool    // Debug logging
   Amqp    AMQP
   Http    HTTP
 }
@@ -34,4 +35,18 @@ func loadConfig( configFile *string ) {
   // Call each supported init method so they can play with the config
   amqpInit()
   httpInit()
+}
+
+// log.Println() only if debug is enabled
+func debug( v ...interface{} ) {
+  if( settings.Debug ) {
+    log.Println( v... )
+  }
+}
+
+// helper, log fatal if err is not nil
+func fatalOnError( err interface{} ) {
+  if( err != nil ) {
+    log.Fatal( err )
+  }
 }

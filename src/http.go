@@ -22,7 +22,7 @@ func httpInit( ) {
   settings.Http.enabled = settings.Http.Url != ""
   log.Println( "enabled ", settings.Http.enabled, " url ", settings.Http.Url, " expr ", settings.Http.Url != "" )
   if( settings.Http.enabled ) {
-    log.Println("Enabling http")
+    debug("Enabling http")
   }
 }
 
