@@ -38,7 +38,9 @@ type SUBSCRIPTION struct {
   // Unique name for this subscription
   Name            string            `yaml:"name"`
   // The routing key when sending messages
-  routingKey      string            `yaml:"routingKey"`
+  RoutingKey      string            `yaml:"routingKey"`
+  // ==== Internal
+  sub             *stomp.Subscription `yaml:"-"`
 }
 
 func stompInit() {
@@ -74,10 +76,34 @@ func stompConnect() {
   settings.Stomp.connection = con
 
   log.Println( "Connected to", settings.Stomp.Server )
+
+  for index,element := range settings.Stomp.Subscription {
+    log.Println( index, "Subscribing to", element.Topic )
+
+    sub, err := con.Subscribe( element.Topic, stomp.AckClient )
+    fatalOnError( err )
+    settings.Stomp.Subscription[ index ].sub = sub
+
+    go processQueue( &(settings.Stomp.Subscription[ index ]) )
+  }
+}
+
+func processQueue( subscription *SUBSCRIPTION ) {
+  debug( "Listening for", subscription.Topic )
+  for {
+    debug( "Tick", subscription.Topic )
+    msg := <-subscription.sub.C
+    fatalOnError( msg.Err )
+
+    amqpPublish( subscription.RoutingKey, msg.Body )
+
+    err := settings.Stomp.connection.Ack( msg )
+    fatalOnError( err )
+  }
 }
 
 func stompRun() {
   log.Println( "Stomp" )
 
-
+  stompConnect()
 }

@@ -1,0 +1,37 @@
+# Example config.yaml for connecting to NetworkRail NROD Feed
+
+# Turn on debugging
+#debug: true
+
+# Required: Details on logging in to RabbitMQ
+amqp:
+  # Required: RabbitMQ connection string: amqp://user:pass@hostname
+  url: amqp://user:pass@rabbitHost
+  # Optional: The exchange to use, defaults to amq.topic
+  #exchange: amq.topic
+
+stomp:
+  server: "datafeeds.networkrail.co.uk:61618"
+  username: "user@example.com"
+  password: "s3cr3t"
+  clientId: "user@example.com"
+  host: "/"
+  heartBeat:
+    sendTimeout: 15s
+    receiveTimeout: 15s
+  subscription:
+    # TRUST Movements
+    -
+      topic: "/topic/TRAIN_MVT_ALL_TOC"
+      name: "train_mvt-feed"
+      routingKey: feed.nrod.mvt
+    # RTPPM Feed
+    -
+      topic: "/topic/RTPPM_ALL"
+      name: "rtppm-feed"
+      routingKey: feed.nrod.rtppm
+    # TD Feed
+    -
+      topic: "/topic/TD_ALL_SIG_AREA"
+      name: "td-all-feed"
+      routingKey: feed.nrod.td
