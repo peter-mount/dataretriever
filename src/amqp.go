@@ -2,29 +2,37 @@
 
 package main
 
-import "log"
-import "github.com/streadway/amqp"
+import (
+  "log"
+  "github.com/streadway/amqp"
+)
 
-type Rabbit struct {
-  config      *Config           // Pointer to global config
-  connection  *amqp.Connection  // amqp connection
-  channel     *amqp.Channel     // amqp channel
+type AMQP struct {
+  Url         string `yaml:"url"`
+  Exchange    string `yaml:"exchange"`
+  RoutingKey  string `yaml:"routingKey"`
+  connection  *amqp.Connection  `yaml:"-"`  // amqp connection
+  channel     *amqp.Channel     `yaml:"-"`  // amqp channel
 }
 
-var rabbit Rabbit
-
 // called by main() ensure mandatory config is present
-func amqpInit( config *Config ) {
-  if( config.amqp == "" ) {
-    log.Fatal( "--amqp is mandatory" )
+func amqpInit( ) {
+  if( settings.Amqp.Url == "" ) {
+    log.Fatal( "amqp.url is mandatory" )
   }
 
-  rabbit.config = config
+  if( settings.Amqp.Exchange == "" ) {
+    settings.Amqp.Exchange = "amq.topic"
+  }
+
+  if( settings.Amqp.RoutingKey == "" ) {
+    log.Fatal( "amqp.routingKey is mandatory" )
+  }
 }
 
 // Connect to amqp server as necessary
 func amqpConnect( ) {
-  if( rabbit.connection != nil && rabbit.channel != nil ) {
+  if( settings.Amqp.connection != nil && settings.Amqp.channel != nil ) {
     log.Println( "Already connected" )
     return
   }
@@ -32,11 +40,11 @@ func amqpConnect( ) {
   log.Println( "Connecting to amqp" )
 
   // Connect using the amqp url
-  connection, err := amqp.Dial( config.amqp )
+  connection, err := amqp.Dial( settings.Amqp.Url )
   if( err != nil ) {
     log.Fatal( "Failed to connect to AMQP: ", err )
   }
-  rabbit.connection = connection
+  settings.Amqp.connection = connection
 
   // To cleanly shutdown by flushing kernel buffers, make sure to close and
   // wait for the response.
@@ -46,15 +54,15 @@ func amqpConnect( ) {
   // channel, the channel will no longer be valid, throw it away and try with
   // a different channel.  If you use many channels, it's useful for the
   // server to
-  channel, err := rabbit.connection.Channel()
+  channel, err := settings.Amqp.connection.Channel()
   if( err != nil ) {
     log.Fatal( "Failed to connect to AMQP: ", err )
   }
-  rabbit.channel = channel
+  settings.Amqp.channel = channel
 
   log.Println( "AMQP Connected" )
 
-  if err := rabbit.channel.ExchangeDeclare( rabbit.config.exchange, "topic", true, false, false, false, nil); err != nil {
+  if err := settings.Amqp.channel.ExchangeDeclare( settings.Amqp.Exchange, "topic", true, false, false, false, nil); err != nil {
     log.Fatalf("exchange.declare destination: %s", err)
   }
 
@@ -62,11 +70,11 @@ func amqpConnect( ) {
 
 // Publish a message
 func amqpPublish( msg []byte ) {
-  log.Println( "Publishing to ", rabbit.config.exchange, rabbit.config.routingKey )
+  //log.Println( "Publishing to ", settings.amqp.exchange, settings.amqp.routingKey )
 
-  err := rabbit.channel.Publish(
-    rabbit.config.exchange,
-    rabbit.config.routingKey,
+  err := settings.Amqp.channel.Publish(
+    settings.Amqp.Exchange,
+    settings.Amqp.RoutingKey,
     false,
     false,
     amqp.Publishing{

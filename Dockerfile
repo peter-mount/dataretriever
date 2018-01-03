@@ -11,8 +11,11 @@ ENV GOOS=linux
 RUN go get -v \
       flag \
       log \
+      io/ioutil \
+      path/filepath \
       github.com/go-stomp/stomp \
-      github.com/streadway/amqp
+      github.com/streadway/amqp \
+      gopkg.in/yaml.v2
 
 # Import the source and compile
 WORKDIR /src
