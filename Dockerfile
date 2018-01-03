@@ -9,10 +9,12 @@ ENV GOOS=linux
 
 # Ensure we have the libraries - docker will cache these between builds
 RUN go get -v \
+      flag \
       log \
       github.com/go-stomp/stomp \
       github.com/streadway/amqp
 
+# Import the source and compile
 WORKDIR /src
 
 ADD src /src/
@@ -23,7 +25,7 @@ RUN go build \
       -o /usr/local/bin/bridge \
       .
 
-# Runtime container containing just the single binary
+# Finally build the final runtime container containing just the single static binary
 FROM scratch
 COPY --from=build /usr/local/bin/bridge /usr/local/bin/bridge
 CMD ["bridge"]
