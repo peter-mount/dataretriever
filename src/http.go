@@ -29,6 +29,8 @@ type HTTP struct {
     User      string
     Password  string
   } `yaml:"basicAuth"`
+  // The routing key to use
+  RoutingKey  string `yaml:"routingKey"`
   // ==== Internal values
   enabled         bool              `yaml:"-"`
 }
@@ -45,6 +47,10 @@ func httpInit( ) {
   }
 
   if( settings.Http.enabled ) {
+    if( settings.Http.RoutingKey == "" ) {
+      log.Fatal( "http.routingKey is mandatory" )
+    }
+
     debug("Enabling http for", settings.Http.Url, "every", settings.Http.Duration )
   }
 }
@@ -80,7 +86,7 @@ func httpRetrieve() {
 
   // Publish only on 200 unless PublishOnError is set
   if( ( resp.StatusCode >= 200 && resp.StatusCode < 300 ) || settings.Http.PublishOnError ) {
-    amqpPublish( b )
+    amqpPublish( settings.Http.RoutingKey, b )
   }
 
   defer resp.Body.Close()

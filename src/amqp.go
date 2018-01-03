@@ -10,7 +10,6 @@ import (
 type AMQP struct {
   Url         string `yaml:"url"`
   Exchange    string `yaml:"exchange"`
-  RoutingKey  string `yaml:"routingKey"`
   connection  *amqp.Connection  `yaml:"-"`  // amqp connection
   channel     *amqp.Channel     `yaml:"-"`  // amqp channel
 }
@@ -23,10 +22,6 @@ func amqpInit( ) {
 
   if( settings.Amqp.Exchange == "" ) {
     settings.Amqp.Exchange = "amq.topic"
-  }
-
-  if( settings.Amqp.RoutingKey == "" ) {
-    log.Fatal( "amqp.routingKey is mandatory" )
   }
 }
 
@@ -57,12 +52,12 @@ func amqpConnect( ) {
 }
 
 // Publish a message
-func amqpPublish( msg []byte ) {
-  debug( "Publishing to ", settings.Amqp.Exchange, settings.Amqp.RoutingKey )
+func amqpPublish( routingKey string, msg []byte ) {
+  debug( "Publishing to ", settings.Amqp.Exchange, routingKey )
 
   fatalOnError( settings.Amqp.channel.Publish(
     settings.Amqp.Exchange,
-    settings.Amqp.RoutingKey,
+    routingKey,
     false,
     false,
     amqp.Publishing{
