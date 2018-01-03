@@ -36,6 +36,33 @@ An optional setting that turns on additional debugging. For production set this 
 debug: true
 ```
 
+### STOMP bridge
+
+In this mode this will bridge a remote STOMP server to RabbitMQ. The instance will connect to a single remote server but you can subscribe to multiple topics, each one will forward each message to an individual routingKey.
+
+Example of connecting to a STOMP server & subscribing to 2 topics
+
+```
+stomp:
+  server: "example.com:61618"
+  username: "user@example.com"
+  password: "s3cr3t"
+  clientId: "user@example.com"
+  host: "/"
+  heartBeat:
+    sendTimeout: 15s
+    receiveTimeout: 15s
+  subscription:
+  -
+    topic: "/topic/TOPIC1"
+    name: "topic1"
+    routingKey: feed.topic1
+  -
+    topic: "/topic/TOPIC2"
+    name: "topic2"
+    routingKey: feed.topic2
+```
+
 ### HTTP polling
 
 This mode is intended for remotely accessing a remote webservice. Any response received is then subbitted to the local RabbitMQ instance.
