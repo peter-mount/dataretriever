@@ -3,6 +3,7 @@
 package main
 
 import (
+  "gopkg.in/robfig/cron.v2"
   "io/ioutil"
   "log"
   "net/http"
@@ -10,9 +11,11 @@ import (
 )
 
 type HTTP struct {
-  enabled         bool              `yaml:"-"`
   // URL to retrieve
   Url             string            `yaml:"url"`
+  // One of Schedule or Duration is required
+  // Crontab schedule
+  Schedule        string            `yaml:"schedule"`
   // Duration between requests
   Duration        time.Duration     `yaml:"duration"`
   // If set then we don't retrieve on startup
@@ -26,11 +29,21 @@ type HTTP struct {
     User      string
     Password  string
   } `yaml:"basicAuth"`
+  // ==== Internal values
+  enabled         bool              `yaml:"-"`
 }
 
 func httpInit( ) {
   // Only enable if we have a url set and a duration >= 1 second
-  settings.Http.enabled = settings.Http.Url != "" && settings.Http.Duration >= time.Second
+  settings.Http.enabled = settings.Http.Url != ""
+
+  // Check if duration is in use else use the schedule
+  if( settings.Http.enabled ) {
+    if( settings.Http.Duration < time.Second ) {
+      settings.Http.enabled = settings.Http.Schedule != ""
+    }
+  }
+
   if( settings.Http.enabled ) {
     debug("Enabling http for", settings.Http.Url, "every", settings.Http.Duration )
   }
@@ -73,7 +86,10 @@ func httpRetrieve() {
   defer resp.Body.Close()
 }
 
-func httpRun() {
+// Uses a simple ticker to run every duration
+func httpRunDuration() {
+  debug( "Running with duration", settings.Http.Duration.String() )
+
   // Initial retrieve
   if( !settings.Http.NotOnStart ) {
     httpRetrieve()
@@ -90,4 +106,23 @@ func httpRun() {
       }
     }
   }()
+}
+
+// Run's on a cron schedule
+func httpRunCron() {
+  debug( "Running with schedule", settings.Http.Schedule )
+
+  c := cron.New()
+  c.AddFunc( settings.Http.Schedule, func() {
+    httpRetrieve()
+  })
+  c.Start()
+}
+
+func httpRun() {
+  if( settings.Http.Duration >= time.Second ) {
+    httpRunDuration()
+  } else {
+    httpRunCron()
+  }
 }

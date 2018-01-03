@@ -17,6 +17,7 @@ RUN go get -v \
       flag \
       github.com/go-stomp/stomp \
       github.com/streadway/amqp \
+      gopkg.in/robfig/cron.v2 \
       gopkg.in/yaml.v2 \
       io/ioutil \
       log \
