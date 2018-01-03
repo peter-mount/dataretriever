@@ -23,15 +23,21 @@ stomp:
     # TRUST Movements
     -
       topic: "/topic/TRAIN_MVT_ALL_TOC"
-      name: "train_mvt-feed"
       routingKey: feed.nrod.mvt
+      # request durable subscription
+      headers:
+        "activemq.subscriptionName": "train_mvt-feed"
     # RTPPM Feed
     -
       topic: "/topic/RTPPM_ALL"
-      name: "rtppm-feed"
       routingKey: feed.nrod.rtppm
+      # request durable subscription
+      headers:
+        "activemq.subscriptionName": "rtppm-feed"
     # TD Feed
     -
       topic: "/topic/TD_ALL_SIG_AREA"
-      name: "td-all-feed"
       routingKey: feed.nrod.td
+      # request durable subscription
+      headers:
+        "activemq.subscriptionName": "td-all-feed"

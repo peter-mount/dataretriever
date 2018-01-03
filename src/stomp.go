@@ -4,6 +4,7 @@ package main
 
 import (
   "github.com/go-stomp/stomp"
+  "github.com/go-stomp/stomp/frame"
   "log"
   "time"
 )
@@ -35,10 +36,10 @@ type STOMP struct {
 type SUBSCRIPTION struct {
   // Topic to subscribe to
   Topic           string            `yaml:"topic"`
-  // Unique name for this subscription
-  Name            string            `yaml:"name"`
   // The routing key when sending messages
   RoutingKey      string            `yaml:"routingKey"`
+  // Headers to send on subscription
+  Headers         map[string]string `yaml:"headers"`
   // ==== Internal
   sub             *stomp.Subscription `yaml:"-"`
 }
@@ -80,7 +81,24 @@ func stompConnect() {
   for index,element := range settings.Stomp.Subscription {
     log.Println( index, "Subscribing to", element.Topic )
 
-    sub, err := con.Subscribe( element.Topic, stomp.AckClient )
+    var opts []func(*frame.Frame) error
+
+    for key, value := range element.Headers {
+      opts = append( opts, stomp.SubscribeOpt.Header( key, value ) )
+    }
+
+    sub, err := con.Subscribe(
+      element.Topic,
+      stomp.AckClient,
+      func(f *frame.Frame) error {
+        for _, h := range opts {
+          err := h(f)
+          if err != nil {
+            return err
+          }
+        }
+        return nil
+      } )
     fatalOnError( err )
     settings.Stomp.Subscription[ index ].sub = sub
 
