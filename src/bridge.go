@@ -23,15 +23,16 @@ func main() {
   // Load config
   loadConfig( yamlFile )
 
-  if( !settings.Http.enabled ) {
+  if( !settings.Http.enabled && !settings.Stomp.enabled ) {
     log.Fatal( "No message source configured, bailing out" )
   }
 
   amqpConnect()
-  //amqpPublish( []byte("Test message") )
 
   if( settings.Http.enabled ) {
     httpRun()
+  } else if( settings.Stomp.enabled ) {
+    stompRun()
   }
 
   // Now keep running forever

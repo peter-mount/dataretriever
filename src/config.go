@@ -9,8 +9,9 @@ import (
 
 type Config struct {
   Debug   bool    // Debug logging
-  Amqp    AMQP
-  Http    HTTP
+  Amqp    AMQP    // RabbitMQ config
+  Http    HTTP    // HTTP Config
+  Stomp   STOMP   // Stomp Config
 }
 
 var settings Config
@@ -31,6 +32,7 @@ func loadConfig( configFile *string ) {
   // Call each supported init method so they can play with the config
   amqpInit()
   httpInit()
+  stompInit()
 }
 
 // log.Println() only if debug is enabled
