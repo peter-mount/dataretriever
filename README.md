@@ -1,4 +1,4 @@
-# RabbitMQ Bridge
+# dataretriever
 
 This is a simple go application that can bridge a remote service and submit messages to a local RabbitMQ instance.
 
