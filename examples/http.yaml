@@ -1,0 +1,31 @@
+# This example will attempt to retrieve data from http://example.com/api
+# at 1 minute intervals and submit it to RabbotMQ with the routingKey "test.http"
+
+# Turn on debugging
+#debug: true
+
+# Required: Details on logging in to RabbitMQ
+amqp:
+  # Required: RabbitMQ connection string: amqp://user:pass@hostname
+  url: amqp://user:pass@rabbitHost
+  # Optional: The exchange to use, defaults to amq.topic
+  #exchange: amq.topic
+
+# http polling datasource - use for simple rest services accepting HTTP GET requests
+http:
+  # Required: The url to retrieve
+  url: http://example.com/api
+  # Required: The routing key to use for all messages
+  routingKey: test.http
+  # Required: The cron schedule to use
+  schedule: "0 * * * * *"
+  # If set then we publish on any status code rather than success
+  #publishOnError: true
+  # Optional: Basic authentication
+  #basicAuth:
+  #  user: MyUser
+  #  password: MyPassword
+  # Optional: Headers to send in the request
+  #headers:
+  #  authentication: someKey
+  #  key: value
