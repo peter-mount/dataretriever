@@ -10,15 +10,17 @@ import (
 )
 
 type HTTP struct {
-  enabled     bool              `yaml:"-"`
+  enabled         bool              `yaml:"-"`
   // URL to retrieve
-  Url         string            `yaml:"url"`
+  Url             string            `yaml:"url"`
   // Duration between requests
-  Duration    time.Duration     `yaml:"duration"`
+  Duration        time.Duration     `yaml:"duration"`
   // If set then we don't retrieve on startup
-  NotOnStart  bool              `yaml:"notOnStart"`
+  NotOnStart      bool              `yaml:"notOnStart"`
+  // Publish on error
+  PublishOnError  bool              `yaml:"publishOnError"`
   // Headers to send
-  Headers     map[string]string `yaml:"headers"`
+  Headers         map[string]string `yaml:"headers"`
   // Optional Basic authentication
   BasicAuth struct {
     User      string
@@ -63,7 +65,10 @@ func httpRetrieve() {
     log.Fatal( err )
   }
 
-  amqpPublish( b )
+  // Publish only on 200 unless PublishOnError is set
+  if( ( resp.StatusCode >= 200 && resp.StatusCode < 300 ) || settings.Http.PublishOnError ) {
+    amqpPublish( b )
+  }
 
   defer resp.Body.Close()
 }
