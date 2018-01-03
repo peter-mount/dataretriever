@@ -5,8 +5,11 @@ import "log"
 import "os"
 
 type Config struct {
-  help    bool        // true to show help and exit
-  amqp    string      // amqp url
+  help        bool        // true to show help and exit
+  // RabbitMQ config
+  amqp        string      // amqp url
+  exchange    string      // destination exchange
+  routingKey  string      // routing key for outbound messages
 }
 
 var config Config
@@ -14,8 +17,11 @@ var config Config
 func main() {
   log.Println( "RabbitMQ Bridge v0.1" )
 
-  flag.StringVar( &config.amqp, "amqp", "", "The AMQP server to send messages to" )
   flag.BoolVar( &config.help, "h", false, "Show help" )
+
+  flag.StringVar( &config.amqp, "amqp", "", "The AMQP server to send messages to" )
+  flag.StringVar( &config.exchange, "exchange", "amq.topic", "Destination exchange" )
+  flag.StringVar( &config.routingKey, "routingKey", "", "Routing key for outbound messages" )
 
   flag.Parse()
 
@@ -25,4 +31,7 @@ func main() {
   }
 
   amqpInit( &config )
+
+  amqpConnect()
+  amqpPublish( []byte("Test message") )
 }
