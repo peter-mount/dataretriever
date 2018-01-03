@@ -17,20 +17,16 @@ var settings Config
 
 func loadConfig( configFile *string ) {
   filename, _ := filepath.Abs( *configFile )
-  log.Println( "Loading config: ", filename )
+  log.Println( "Loading config:", filename )
 
   yml, err := ioutil.ReadFile( filename )
-  if err != nil {
-    log.Fatal( err )
-  }
+  fatalOnError( err )
 
   //settings := Config{}
   err = yaml.Unmarshal( yml, &settings )
-  if err != nil {
-    log.Fatal( err )
-  }
+  fatalOnError( err )
 
-  log.Printf( "Config: %+v\n", settings )
+  debug( "Config: %+v\n", settings )
 
   // Call each supported init method so they can play with the config
   amqpInit()
