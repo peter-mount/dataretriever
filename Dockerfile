@@ -21,7 +21,8 @@ RUN go get -v \
       io/ioutil \
       log \
       net/http \
-      path/filepath
+      path/filepath \
+      time
 
 # Import the source and compile
 WORKDIR /src

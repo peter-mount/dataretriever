@@ -4,6 +4,7 @@ import (
   "flag"
   "log"
   "os"
+  "time"
 )
 
 func main() {
@@ -33,4 +34,8 @@ func main() {
     httpRun()
   }
 
+  // Now keep running forever
+  for {
+    time.Sleep(time.Minute)
+  }
 }
