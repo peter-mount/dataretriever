@@ -55,12 +55,13 @@ stomp:
   subscription:
   -
     topic: "/topic/TOPIC1"
-    name: "topic1"
     routingKey: feed.topic1
   -
+    # durable subscription - valid for activemq only
     topic: "/topic/TOPIC2"
-    name: "topic2"
     routingKey: feed.topic2
+    headers:
+      "activemq.subscriptionName": "topic2"
 ```
 
 ### HTTP polling
