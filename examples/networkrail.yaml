@@ -11,18 +11,27 @@ amqp:
   #exchange: amq.topic
 
 stomp:
+  # The remote stomp server url
   server: "datafeeds.networkrail.co.uk:61618"
+  # Replace with your nrod account credentials
   username: "user@example.com"
   password: "s3cr3t"
+  # A unique client id, usually your email address
   clientId: "user@example.com"
+  # delay connecting, so if there's a service issue you
+  # don't hammer the remote server
+  connectionDelay: 30s
+  # Connection details for this client
   host: "/"
   heartBeat:
     sendTimeout: 15s
     receiveTimeout: 15s
+  # Example of multiple subscriptions
   subscription:
     # TRUST Movements
     -
       topic: "/topic/TRAIN_MVT_ALL_TOC"
+      # publish all messages with this routingKey
       routingKey: feed.nrod.mvt
       # request durable subscription
       headers:
@@ -30,6 +39,7 @@ stomp:
     # RTPPM Feed
     -
       topic: "/topic/RTPPM_ALL"
+      # publish all messages with this routingKey
       routingKey: feed.nrod.rtppm
       # request durable subscription
       headers:
@@ -37,6 +47,7 @@ stomp:
     # TD Feed
     -
       topic: "/topic/TD_ALL_SIG_AREA"
+      # publish all messages with this routingKey
       routingKey: feed.nrod.td
       # request durable subscription
       headers:
