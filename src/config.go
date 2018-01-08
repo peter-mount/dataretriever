@@ -1,17 +1,20 @@
 package main
 
 import (
-  "log"
-  "io/ioutil"
-  "path/filepath"
+  "github.com/peter-mount/golib/rabbitmq"
+  "github.com/peter-mount/golib/statistics"
   "gopkg.in/yaml.v2"
+  "io/ioutil"
+  "log"
+  "path/filepath"
 )
 
 type Config struct {
-  Debug   bool    // Debug logging
-  Amqp    AMQP    // RabbitMQ config
-  Http    HTTP    // HTTP Config
-  Stomp   STOMP   // Stomp Config
+  Debug   bool                    // Debug logging
+  Stats   statistics.Statistics   // Statistics
+  Amqp    rabbitmq.RabbitMQ       // RabbitMQ config
+  Http    HTTP                    // HTTP Config
+  Stomp   STOMP                   // Stomp Config
 }
 
 var settings Config
@@ -30,7 +33,7 @@ func loadConfig( configFile *string ) {
   debug( "Config: %+v\n", settings )
 
   // Call each supported init method so they can play with the config
-  amqpInit()
+  settings.Stats.Configure()
   httpInit()
   stompInit()
 }

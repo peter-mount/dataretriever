@@ -5,6 +5,7 @@ package main
 import (
   "github.com/go-stomp/stomp"
   "github.com/go-stomp/stomp/frame"
+  "github.com/peter-mount/golib/statistics"
   "log"
   "time"
 )
@@ -23,6 +24,8 @@ type STOMP struct {
     SendTimeout     time.Duration   `yaml:"sendTimeout"`
     ReceiveTimeout  time.Duration   `yaml:"receiveTimeout"`
   } `yaml:"heartBeat"`
+  // Connect delay to stop reconnecting too quickly
+  ConnectDelay    time.Duration     `yaml:"connectDelay"`
   // Host header
   Host            string            `yaml:"host"`
   // Subscriptions
@@ -40,6 +43,8 @@ type SUBSCRIPTION struct {
   RoutingKey      string            `yaml:"routingKey"`
   // Headers to send on subscription
   Headers         map[string]string `yaml:"headers"`
+  // Label used in recording statistics
+  Label           string
   // ==== Internal
   sub             *stomp.Subscription `yaml:"-"`
 }
@@ -61,6 +66,17 @@ func stompInit() {
 }
 
 func stompConnect() {
+  go func() {
+    if settings.Stomp.ConnectDelay >= time.Second {
+      log.Println( "Stomp waiting", settings.Stomp.ConnectDelay.String() )
+      time.Sleep( settings.Stomp.ConnectDelay )
+    }
+    stompConnectImpl()
+  }()
+}
+
+func stompConnectImpl() {
+
   log.Println( "Connecting to", settings.Stomp.Server )
 
   con, err := stomp.Dial(
@@ -102,6 +118,10 @@ func stompConnect() {
     fatalOnError( err )
     settings.Stomp.Subscription[ index ].sub = sub
 
+    if settings.Stomp.Subscription[ index ].Label == "" {
+      settings.Stomp.Subscription[ index ].Label = settings.Stomp.Subscription[ index ].RoutingKey
+    }
+
     go processQueue( &(settings.Stomp.Subscription[ index ]) )
   }
 }
@@ -113,15 +133,11 @@ func processQueue( subscription *SUBSCRIPTION ) {
     msg := <-subscription.sub.C
     fatalOnError( msg.Err )
 
-    amqpPublish( subscription.RoutingKey, msg.Body )
+    settings.Amqp.Publish( subscription.RoutingKey, msg.Body )
+
+    statistics.Incr( subscription.Label )
 
     err := settings.Stomp.connection.Ack( msg )
     fatalOnError( err )
   }
-}
-
-func stompRun() {
-  log.Println( "Stomp" )
-
-  stompConnect()
 }

@@ -3,6 +3,7 @@
 package main
 
 import (
+  "github.com/peter-mount/golib/statistics"
   "gopkg.in/robfig/cron.v2"
   "io/ioutil"
   "log"
@@ -85,8 +86,14 @@ func httpRetrieve() {
   }
 
   // Publish only on 200 unless PublishOnError is set
-  if( ( resp.StatusCode >= 200 && resp.StatusCode < 300 ) || settings.Http.PublishOnError ) {
-    amqpPublish( settings.Http.RoutingKey, b )
+  if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+    settings.Amqp.Publish( settings.Http.RoutingKey, b )
+    statistics.Incr( settings.Http.RoutingKey + ".ok" )
+  } else {
+    if settings.Http.PublishOnError {
+      settings.Amqp.Publish( settings.Http.RoutingKey, b )
+    }
+    statistics.Incr( settings.Http.RoutingKey + ".error" )
   }
 
   defer resp.Body.Close()

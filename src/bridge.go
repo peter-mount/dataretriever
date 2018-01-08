@@ -27,12 +27,12 @@ func main() {
     log.Fatal( "No message source configured, bailing out" )
   }
 
-  amqpConnect()
+  settings.Amqp.Connect()
 
   if( settings.Http.enabled ) {
     httpRun()
   } else if( settings.Stomp.enabled ) {
-    stompRun()
+    stompConnect()
   }
 
   // Now keep running forever
