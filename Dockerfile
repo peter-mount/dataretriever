@@ -1,16 +1,16 @@
 # Dockerfile used to build the application
 
+# ============================================================
+# The base golang environment with curl, git, uptodate tzdata
+# and go-bindata installed
+FROM golang:alpine as golang
+RUN apk add --no-cache \
+      curl \
+      git \
+      tzdata
+
 # Build container containing our pre-pulled libraries
-FROM golang:latest as build
-
-# Static compile
-ENV CGO_ENABLED=0
-ENV GOOS=linux
-
-# We want to build our final image under /dest
-# A copy of /etc/ssl is required if we want to use https datasources
-RUN mkdir -p /dest/etc &&\
-    cp -rp /etc/ssl /dest/etc/
+FROM golang as source
 
 # Ensure we have the libraries - docker will cache these between builds
 RUN go get -v \
@@ -27,16 +27,32 @@ RUN go get -v \
       path/filepath \
       time
 
-# Import the source and compile
-WORKDIR /src
-ADD src /src/
-RUN go build \
-      -v \
-      -x \
-      -o /dest/bin/bridge \
-      .
+WORKDIR /go/src/github.com/peter-mount/dataretriever
+ADD src/ .
 
-# Finally build the final runtime container will all required files
-FROM scratch
-COPY --from=build /dest/ /
-CMD ["bridge"]
+# ============================================================
+# Now compile our binaries
+FROM source as compiler
+ARG arch
+ARG goos
+ARG goarch
+ARG goarm
+
+RUN CGO_ENABLED=0 \
+    GOOS=${goos} \
+    GOARCH=${goarch} \
+    GOARM=${goarm} \
+    go build -o /usr/local/bin/dataretriever \
+      github.com/peter-mount/dataretriever
+
+# ============================================================
+# Finally build the final runtime container
+FROM alpine
+
+RUN apk add --no-cache \
+      curl \
+      tzdata
+
+COPY --from=compiler /usr/local/bin/dataretriever /usr/local/bin/dataretriever
+
+CMD ["dataretriever"]
