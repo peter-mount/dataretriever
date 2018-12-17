@@ -12,22 +12,28 @@ RUN apk add --no-cache \
 # Build container containing our pre-pulled libraries
 FROM golang as source
 
-# Ensure we have the libraries - docker will cache these between builds
-RUN go get -v \
-      flag \
-      github.com/go-stomp/stomp \
-      github.com/peter-mount/golib/rabbitmq \
-      github.com/peter-mount/golib/statistics  \
-      github.com/streadway/amqp \
-      gopkg.in/robfig/cron.v2 \
-      gopkg.in/yaml.v2 \
-      io/ioutil \
-      log \
-      net/http \
-      path/filepath \
-      time
+WORKDIR /work
 
-WORKDIR /go/src/github.com/peter-mount/dataretriever
+# Download dependencies before copying any sources then we
+# can use the docker cache to limit updates
+ADD go.mod .
+RUN go mod download
+
+# Ensure we have the libraries - docker will cache these between builds
+#RUN go get -v \
+#      flag \
+#      github.com/go-stomp/stomp \
+#      github.com/peter-mount/golib/rabbitmq \
+#      github.com/peter-mount/golib/statistics  \
+#      github.com/streadway/amqp \
+#      gopkg.in/robfig/cron.v2 \
+#      gopkg.in/yaml.v2 \
+#      io/ioutil \
+#      log \
+#      net/http \
+#      path/filepath \
+#      time
+
 ADD src/ .
 
 # ============================================================
@@ -43,7 +49,7 @@ RUN CGO_ENABLED=0 \
     GOARCH=${goarch} \
     GOARM=${goarm} \
     go build -o /usr/local/bin/dataretriever \
-      github.com/peter-mount/dataretriever
+      .
 
 # ============================================================
 # Finally build the final runtime container
